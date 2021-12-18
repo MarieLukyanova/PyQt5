@@ -1,10 +1,13 @@
 import sys
-import copy
 
 from PyQt5.QtWidgets import QWidget, QApplication
 from PyQt5.QtGui import QPainter, QColor
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QPoint
 from random import randint
+
+
+def except_hook(cls, exception, traceback):
+    sys.__excepthook__(cls, exception, traceback)
 
 
 class Example(QWidget):
@@ -29,10 +32,14 @@ class Example(QWidget):
         qp.setBrush(QColor(randint(0, 255), randint(0, 255), randint(0, 255)))
         wh = randint(10, 300)
         if self.figura == 0:
-            qp.drawEllipse(self.x, self.y, wh, wh)
+            qp.drawEllipse(self.x - wh // 2, self.y - wh // 2, wh, wh)
         elif self.figura == 3:
-            qp.drawPolygon([self.x, self.y - round(wh * 2/3)], [self.x + round(wh * 1/3), self.y + round(wh * 1/3)],
-                           [self.x - round(wh * 2/3), self.y + round(wh * 1/3)])
+            qp.drawPolygon(QPoint(self.x, self.y - int(wh * 3 ** 0.5 / 4)),
+                           QPoint(self.x + wh // 2, self.y +
+                                  int(wh * 3 ** 0.5 / 4)),
+                           QPoint(self.x - wh // 2, self.y + int(
+                               wh * 3 ** 0.5 / 4))
+                           )
         elif self.figura == 4:
             qp.drawRect(self.x - wh // 2, self.y - wh // 2, wh, wh)
 
@@ -41,18 +48,21 @@ class Example(QWidget):
         self.y = event.y()
 
     def mousePressEvent(self, event):
-        if (event.button() == Qt.LeftButton):
+        if event.button() == Qt.LeftButton:
             self.figura = 0
-        elif (event.button() == Qt.RightButton):
+        elif event.button() == Qt.RightButton:
             self.figura = 4
+        self.update()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Space:
             self.figura = 3
+            self.update()
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = Example()
     ex.show()
+    sys.excepthook = except_hook
     sys.exit(app.exec())
